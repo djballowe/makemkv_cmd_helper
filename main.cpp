@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <map>
@@ -8,9 +10,7 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
-string testString = R"(TINFO:2,10,0,"61.2 GB"
+std::string testString = R"(TINFO:2,10,0,"61.2 GB"
 TINFO:2,30,0,"Inglourious Basterds - 28 chapter(s) , 61.2 GB"
 TINFO:3,10,0,"10.6 GB"
 TINFO:3,30,0,"Inglourious Basterds - 7 chapter(s) , 10.6 GB"
@@ -25,10 +25,10 @@ TINFO:17,30,0,"Inglourious Basterds , 1.0 GB"
 TINFO:18,10,0,"1.1 GB"
 TINFO:18,30,0,"Inglourious Basterds , 1.1 GB")";
 
-vector<string> split(string split_string, char delimiter) {
-    string token;
-    vector<string> output;
-    stringstream ss(split_string);
+std::vector<std::string> split(std::string split_string, char delimiter) {
+    std::string token;
+    std::vector<std::string> output;
+    std::stringstream ss(split_string);
 
     while (getline(ss, token, delimiter)) {
         output.push_back(token);
@@ -37,43 +37,47 @@ vector<string> split(string split_string, char delimiter) {
     return output;
 }
 
-void parseTitle(map<int, pair<string, int>> &titles, string buffer) {
-    vector<string> split_output = split(buffer, '"');
+void parseTitle(std::map<int, std::pair<std::string, int>> &titles,
+                std::string buffer) {
+    std::vector<std::string> split_output = split(buffer, '"');
     if (split_output.size() != 3) {
         return;
     }
 
-    string title_line = split_output[0];
-    string name_size = split_output[split_output.size() - 2];
+    std::string title_line = split_output[0];
+    std::string name_size = split_output[split_output.size() - 2];
 
     size_t has_chapters = name_size.find("chapter(s)");
     size_t has_GB = name_size.find("GB");
-    if (has_chapters == string::npos || has_GB == string::npos) {
+    if (has_chapters == std::string::npos || has_GB == std::string::npos) {
         return;
     }
 
-    vector<string> name_size_split = split(name_size, ',');
-    vector<string> title_line_split = split(title_line, ':');
-    vector<string> title = split(title_line_split[1], ',');
+    std::vector<std::string> name_size_split = split(name_size, ',');
+    std::vector<std::string> title_line_split = split(title_line, ':');
+    std::vector<std::string> title = split(title_line_split[1], ',');
     int title_number = stoi(title[0]);
+    std::string size = name_size_split[1];
 
-    cout << title_number << endl;
+    float_t title_size_GB = stof(size);
+
+    std::cout << title_size_GB << std::endl;
 
     return;
 }
 
-vector<string> execMake(const char *command) {
-    vector<string> output;
+std::vector<std::string> execMake(const char *command) {
+    std::vector<std::string> output;
     FILE *fp;
     fp = popen(command, "r");
 
     if (fp == NULL) {
-        cout << "error" << endl;
-        throw runtime_error("command run failed");
+        std::cout << "error" << std::endl;
+        throw std::runtime_error("command run failed");
     }
 
-    map<int, pair<string, int>> titles;
-    array<char, 256> buffer;
+    std::map<int, std::pair<std::string, int>> titles;
+    std::array<char, 256> buffer;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         if (buffer[0] == 'T') {
@@ -83,7 +87,7 @@ vector<string> execMake(const char *command) {
         }
     }
 
-    // for (string val : output) {
+    // for (std::string val : output) {
     //     cout << val << endl;
     // }
 
@@ -93,9 +97,9 @@ vector<string> execMake(const char *command) {
 int main() {
     const char *command = "makemkvcon -r info disc:0";
     try {
-        vector<string> outputString = execMake(command);
+        std::vector<std::string> outputString = execMake(command);
     } catch (...) {
-        cout << "error running command" << endl;
+        std::cout << "error running command" << std::endl;
         return 1;
     }
 
