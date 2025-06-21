@@ -10,21 +10,6 @@
 #include <string>
 #include <vector>
 
-std::string testString = R"(TINFO:2,10,0,"61.2 GB"
-TINFO:2,30,0,"Inglourious Basterds - 28 chapter(s) , 61.2 GB"
-TINFO:3,10,0,"10.6 GB"
-TINFO:3,30,0,"Inglourious Basterds - 7 chapter(s) , 10.6 GB"
-TINFO:4,10,0,"4.8 GB"
-TINFO:4,30,0,"Inglourious Basterds - 7 chapter(s) , 4.8 GB"
-TINFO:7,10,0,"1.3 GB"
-TINFO:7,30,0,"Inglourious Basterds - 3 chapter(s) , 1.3 GB"
-TINFO:12,10,0,"1.7 GB"
-TINFO:12,30,0,"Inglourious Basterds - 3 chapter(s) , 1.7 GB"
-TINFO:17,10,0,"1.0 GB"
-TINFO:17,30,0,"Inglourious Basterds , 1.0 GB"
-TINFO:18,10,0,"1.1 GB"
-TINFO:18,30,0,"Inglourious Basterds , 1.1 GB")";
-
 std::vector<std::string> split(std::string split_string, char delimiter) {
     std::string token;
     std::vector<std::string> output;
@@ -64,7 +49,6 @@ void parseTitle(std::map<int, std::pair<std::string, int>> &titles, std::string 
 }
 
 std::string buildRipCommand(const char *command) {
-    std::vector<std::string> output;
     FILE *fp;
     fp = popen(command, "r");
 
@@ -85,7 +69,7 @@ std::string buildRipCommand(const char *command) {
     std::cout << "found titles" << std::endl;
     for (const auto pair : titles) {
         std::cout << "Title: " << pair.first << std::endl;
-        std::cout << "------- " << pair.second.first << " | " << pair.second.second << " GB" << std::endl;
+        std::cout << "------- " << pair.second.first << "| " << pair.second.second << " GB" << std::endl;
     }
 
     int title_selection = -1;
@@ -103,13 +87,37 @@ std::string buildRipCommand(const char *command) {
         break;
     }
 
-    std::string rip_command = "makemkvcon -r --progress=-same disc:0 " + std::to_string(title_selection) + " /mnt/plex_media/movies";
+    std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(title_selection) + " /mnt/plex_media/test_folder";
 
     return rip_command;
 }
 
+void parseLoading(std::string buffer, std::string current_operation, std::string current_action, std::string current_progress) {
+    if (buffer.find("Current operation")) {
+    }
+
+    return;
+}
+
 std::string execRip(std::string rip_command) {
-    
+    FILE *fp;
+    fp = popen(rip_command.c_str(), "r");
+
+    if (fp == NULL) {
+        std::cout << "error" << std::endl;
+        throw std::runtime_error("command run failed");
+    }
+
+    std::array<char, 256> buffer;
+
+    std::string current_operation;
+    std::string current_action;
+    std::string current_progress;
+
+    while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
+        std::cout << buffer.data() << std::endl;
+        parseLoading(buffer.data(), current_operation, current_action, current_progress);
+    }
     return "";
 }
 
