@@ -37,8 +37,7 @@ std::vector<std::string> split(std::string split_string, char delimiter) {
     return output;
 }
 
-void parseTitle(std::map<int, std::pair<std::string, int>> &titles,
-                std::string buffer) {
+void parseTitle(std::map<int, std::pair<std::string, int>> &titles, std::string buffer) {
     std::vector<std::string> split_output = split(buffer, '"');
     if (split_output.size() != 3) {
         return;
@@ -57,16 +56,14 @@ void parseTitle(std::map<int, std::pair<std::string, int>> &titles,
     std::vector<std::string> title_line_split = split(title_line, ':');
     std::vector<std::string> title = split(title_line_split[1], ',');
     int title_number = stoi(title[0]);
-    std::string size = name_size_split[1];
+    float_t title_size_GB = stof(name_size_split[1]);
+    std::string name = name_size_split[0];
 
-    float_t title_size_GB = stof(size);
-
-    std::cout << title_size_GB << std::endl;
-
+    titles[title_number] = {name, title_size_GB};
     return;
 }
 
-std::vector<std::string> execMake(const char *command) {
+std::string buildRipCommand(const char *command) {
     std::vector<std::string> output;
     FILE *fp;
     fp = popen(command, "r");
@@ -82,22 +79,45 @@ std::vector<std::string> execMake(const char *command) {
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         if (buffer[0] == 'T') {
             parseTitle(titles, buffer.data());
-            // cout << buffer.data() << endl;
-            // output.push_back(buffer.data());
         }
     }
 
-    // for (std::string val : output) {
-    //     cout << val << endl;
-    // }
+    std::cout << "found titles" << std::endl;
+    for (const auto pair : titles) {
+        std::cout << "Title: " << pair.first << std::endl;
+        std::cout << "------- " << pair.second.first << " | " << pair.second.second << " GB" << std::endl;
+    }
 
-    return output;
+    int title_selection = -1;
+    while (true) {
+        std::cout << "select which title you'd like to rip: ";
+        std::cin >> title_selection;
+        std::cout << std::endl;
+
+        if (std::cin.fail() || titles.find(title_selection) == titles.end()) {
+            std::cout << "Error: please select a valid title number." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }
+        break;
+    }
+
+    std::string rip_command = "makemkvcon -r --progress=-same disc:0 " + std::to_string(title_selection) + " /mnt/plex_media/movies";
+
+    return rip_command;
+}
+
+std::string execRip(std::string rip_command) {
+    
+    return "";
 }
 
 int main() {
     const char *command = "makemkvcon -r info disc:0";
     try {
-        std::vector<std::string> outputString = execMake(command);
+        std::string rip_command = buildRipCommand(command);
+        std::string output = execRip(rip_command);
     } catch (...) {
         std::cout << "error running command" << std::endl;
         return 1;
