@@ -1,14 +1,21 @@
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
 #include <vector>
+
+struct RipState {
+    std::string current_operation = "";
+    std::string current_action = "";
+    int current_progress = 0;
+    int total_progress = 0;
+};
 
 std::vector<std::string> split(std::string split_string, char delimiter) {
     std::string token;
@@ -92,10 +99,42 @@ std::string buildRipCommand(const char *command) {
     return rip_command;
 }
 
-void parseLoading(std::string buffer, std::string current_operation, std::string current_action, std::string current_progress) {
-    if (buffer.find("Current operation")) {
+bool parseLoading(std::string line, RipState &state) {
+    std::regex progress("Current progress - (\\d+)%  , Total progress - (\\d+)%");
+    std::smatch progress_match;
+    bool state_change = false;
+
+    std::regex operation("Current operation: (.+)");
+    std::smatch operation_match;
+
+    std::regex action("Current action: (.+)");
+    std::smatch action_match;
+
+    if (std::regex_search(line, progress_match, progress) && progress_match.size() == 3) {
+        state.current_progress = stoi(progress_match[1]);
+        state.total_progress = stoi(progress_match[2]);
+        state_change = true;
     }
 
+    if (std::regex_search(line, operation_match, operation) && operation_match.size() == 2) {
+        state.current_operation = operation_match[1];
+        state_change = true;
+    }
+
+    if (std::regex_search(line, action_match, action) && action_match.size() == 2) {
+        state.current_action = action_match[1];
+        state_change = true;
+    }
+
+    return state_change;
+}
+
+void displayState(RipState state) {
+    std::cout << "\033[2J\033[1;1H";
+    std::cout << "Current Operation: " << state.current_operation << std::endl;
+    std::cout << "Current Action: " << state.current_action << std::endl;
+    std::cout << "Current Progress: " << state.current_progress << "%" << std::endl;
+    std::cout << "Total Progress: " << state.total_progress << "%" << std::endl;
     return;
 }
 
@@ -110,13 +149,15 @@ std::string execRip(std::string rip_command) {
 
     std::array<char, 256> buffer;
 
-    std::string current_operation;
-    std::string current_action;
-    std::string current_progress;
+    RipState state;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
-        std::cout << buffer.data() << std::endl;
-        parseLoading(buffer.data(), current_operation, current_action, current_progress);
+        std::string line(buffer.data());
+        bool state_change = parseLoading(line, state);
+
+        if (state_change) {
+            displayState(state);
+        }
     }
     return "";
 }
