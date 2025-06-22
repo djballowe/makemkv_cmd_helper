@@ -138,7 +138,7 @@ void displayState(RipState state) {
     return;
 }
 
-std::string execRip(std::string rip_command) {
+void execRip(std::string rip_command) {
     FILE *fp;
     fp = popen(rip_command.c_str(), "r");
 
@@ -159,14 +159,13 @@ std::string execRip(std::string rip_command) {
             displayState(state);
         }
     }
-    return "";
 }
 
 int main() {
     const char *command = "makemkvcon -r info disc:0";
     try {
         std::string rip_command = buildRipCommand(command);
-        std::string output = execRip(rip_command);
+        execRip(rip_command);
     } catch (...) {
         std::cout << "error running command" << std::endl;
         return 1;
