@@ -20,7 +20,7 @@ struct TitleSelection {
     double size = -1.0;
 };
 
-void parseTitle(std::vector<TitleSelection> &titles, std::string& line) {
+void parseTitle(std::vector<TitleSelection> &titles, std::string &line) {
     static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"(.+ - [0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
     std::smatch title_match;
     TitleSelection current_title;
@@ -40,25 +40,7 @@ void parseTitle(std::vector<TitleSelection> &titles, std::string& line) {
     return;
 }
 
-std::string buildRipCommand(const char *command) {
-    FILE *fp;
-    fp = popen(command, "r");
-
-    if (fp == NULL) {
-        std::cout << "error" << std::endl;
-        throw std::runtime_error("command run failed");
-    }
-
-    std::vector<TitleSelection> titles;
-    std::array<char, 256> buffer;
-
-    while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
-        std::string line(buffer.data());
-        if (line[0] == 'T') {
-            parseTitle(titles, line);
-        }
-    }
-
+int selectTitle(std::vector<TitleSelection> &titles) {
     std::cout << "found titles" << std::endl;
     for (int i = 0; i < titles.size(); i++) {
         std::cout << "Title: " << i << std::endl;
@@ -80,8 +62,41 @@ std::string buildRipCommand(const char *command) {
         break;
     }
 
-    std::string rip_command =
-        "makemkvcon mkv --progress=-same disc:0 " + std::to_string(titles[title_selection].title_number) + " /mnt/plex_media/test_folder";
+    return title_selection;
+}
+
+std::string buildRipCommand(const char *command, const std::string destination) {
+    FILE *fp;
+    fp = popen(command, "r");
+
+    if (fp == NULL) {
+        std::cout << "error" << std::endl;
+        throw std::runtime_error("command run failed");
+    }
+
+    std::vector<TitleSelection> titles;
+    std::array<char, 256> buffer;
+
+    while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
+        std::string line(buffer.data());
+        if (line[0] == 'T') {
+            parseTitle(titles, line);
+        }
+    }
+
+    int close_status = pclose(fp);
+    if (close_status == -1) {
+        throw std::runtime_error("error closing child process");
+    }
+
+    if (titles.size() == 0) {
+        throw std::runtime_error("no titles found");
+    }
+
+    int title_selection = selectTitle(titles);
+
+    std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(titles[title_selection].title_number) + " " + destination;
+    std::cout << rip_command << std::endl;
 
     return rip_command;
 }
@@ -146,15 +161,26 @@ void execRip(std::string rip_command) {
             displayState(state);
         }
     }
+
+    int close_status = pclose(fp);
+    if (close_status == -1) {
+        throw std::runtime_error("error closing child process");
+    }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        throw std::runtime_error("Usage: makemkv_helper destination");
+    }
+
+    const std::string destination = argv[1];
     const char *command = "makemkvcon -r info disc:0";
+
     try {
-        std::string rip_command = buildRipCommand(command);
+        std::string rip_command = buildRipCommand(command, destination);
         execRip(rip_command);
     } catch (std::runtime_error &e) {
-        std::cout << "error running command: " << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
         return 1;
     }
 
