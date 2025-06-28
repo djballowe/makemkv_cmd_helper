@@ -96,7 +96,6 @@ std::string buildRipCommand(const char *command, const std::string destination) 
     int title_selection = selectTitle(titles);
 
     std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(titles[title_selection].title_number) + " " + destination;
-    std::cout << rip_command << std::endl;
 
     return rip_command;
 }
