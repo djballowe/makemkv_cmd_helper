@@ -1,14 +1,11 @@
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <iostream>
-#include <map>
+#include <limits>
 #include <regex>
-#include <sstream>
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
-#include <vector>
 
 struct RipState {
     std::string current_operation = "";
@@ -17,44 +14,29 @@ struct RipState {
     int total_progress = 0;
 };
 
-std::vector<std::string> split(std::string split_string, char delimiter) {
-    std::string token;
-    std::vector<std::string> output;
-    std::stringstream ss(split_string);
+struct TitleSelection {
+    std::string name = "";
+    int title_number = -1;
+    double size = -1.0;
+};
 
-    while (getline(ss, token, delimiter)) {
-        output.push_back(token);
+void parseTitle(std::vector<TitleSelection> &titles, std::string& line) {
+    static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"(.+ - [0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
+    std::smatch title_match;
+    TitleSelection current_title;
+
+    if (std::regex_search(line, title_match, reg) && title_match.size() == 4) {
+        int title_number = stoi(title_match[1]);
+        std::string title_name = title_match[2];
+        double title_size_gb = stof(title_match[3]);
+
+        current_title.name = title_name;
+        current_title.title_number = title_number;
+        current_title.size = title_size_gb;
+        titles.push_back(current_title);
+        return;
     }
 
-    return output;
-}
-
-void parseTitle(std::map<int, std::pair<std::string, int>> &titles, std::string buffer) {
-    std::regex progress("/TINFO:([0-9]+),[0-9]+,[0-9]+,\"(.+ - [0-9]+ chapter\(s\\)) , ([0-9]*(?:[.][0-9]+)?) GB\"/gm");
-    std::smatch progress_match;
-
-    // std::vector<std::string> split_output = split(buffer, '"');
-    // if (split_output.size() != 3) {
-    //     return;
-    // }
-    //
-    // std::string title_line = split_output[0];
-    // std::string name_size = split_output[split_output.size() - 2];
-    //
-    // size_t has_chapters = name_size.find("chapter(s)");
-    // size_t has_GB = name_size.find("GB");
-    // if (has_chapters == std::string::npos || has_GB == std::string::npos) {
-    //     return;
-    // }
-    //
-    // std::vector<std::string> name_size_split = split(name_size, ',');
-    // std::vector<std::string> title_line_split = split(title_line, ':');
-    // std::vector<std::string> title = split(title_line_split[1], ',');
-    // int title_number = stoi(title[0]);
-    // float_t title_size_GB = stof(name_size_split[1]);
-    // std::string name = name_size_split[0];
-    //
-    // titles[title_number] = {name, title_size_GB};
     return;
 }
 
@@ -67,21 +49,20 @@ std::string buildRipCommand(const char *command) {
         throw std::runtime_error("command run failed");
     }
 
-    std::map<int, std::pair<std::string, int>> titles;
+    std::vector<TitleSelection> titles;
     std::array<char, 256> buffer;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
         if (line[0] == 'T') {
-            std::cout << line << std::endl;
             parseTitle(titles, line);
         }
     }
 
     std::cout << "found titles" << std::endl;
-    for (const auto pair : titles) {
-        std::cout << "Title: " << pair.first << std::endl;
-        std::cout << "------- " << pair.second.first << "| " << pair.second.second << " GB" << std::endl;
+    for (int i = 0; i < titles.size(); i++) {
+        std::cout << "Title: " << i << std::endl;
+        std::cout << "------- " << titles[i].name << "| " << titles[i].size << " GB" << std::endl;
     }
 
     int title_selection = -1;
@@ -90,7 +71,7 @@ std::string buildRipCommand(const char *command) {
         std::cin >> title_selection;
         std::cout << std::endl;
 
-        if (std::cin.fail() || titles.find(title_selection) == titles.end()) {
+        if (std::cin.fail() || title_selection >= titles.size()) {
             std::cout << "Error: please select a valid title number." << std::endl;
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -99,7 +80,8 @@ std::string buildRipCommand(const char *command) {
         break;
     }
 
-    std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(title_selection) + " /mnt/plex_media/test_folder";
+    std::string rip_command =
+        "makemkvcon mkv --progress=-same disc:0 " + std::to_string(titles[title_selection].title_number) + " /mnt/plex_media/test_folder";
 
     return rip_command;
 }
@@ -171,8 +153,8 @@ int main() {
     try {
         std::string rip_command = buildRipCommand(command);
         execRip(rip_command);
-    } catch (...) {
-        std::cout << "error running command" << std::endl;
+    } catch (std::runtime_error &e) {
+        std::cout << "error running command: " << e.what() << std::endl;
         return 1;
     }
 
