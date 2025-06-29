@@ -21,7 +21,7 @@ struct TitleSelection {
 };
 
 void parseTitle(std::vector<TitleSelection> &titles, std::string &line) {
-    static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"(.+ - [0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
+    static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"((?:.*)?[0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
     std::smatch title_match;
     TitleSelection current_title;
 
@@ -80,6 +80,7 @@ std::string buildRipCommand(const char *command, const std::string destination) 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
         if (line[0] == 'T') {
+            std::cout << line << std::endl;
             parseTitle(titles, line);
         }
     }
