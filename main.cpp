@@ -70,7 +70,6 @@ std::string buildRipCommand(const char *command, const std::string destination) 
     fp = popen(command, "r");
 
     if (fp == NULL) {
-        std::cout << "error" << std::endl;
         throw std::runtime_error("command run failed");
     }
 
@@ -80,7 +79,6 @@ std::string buildRipCommand(const char *command, const std::string destination) 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
         if (line[0] == 'T') {
-            std::cout << line << std::endl;
             parseTitle(titles, line);
         }
     }
@@ -145,7 +143,6 @@ void execRip(std::string rip_command) {
     fp = popen(rip_command.c_str(), "r");
 
     if (fp == NULL) {
-        std::cout << "error" << std::endl;
         throw std::runtime_error("command run failed");
     }
 
