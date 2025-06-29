@@ -21,7 +21,7 @@ struct TitleSelection {
 };
 
 void parseTitle(std::vector<TitleSelection> &titles, std::string &line) {
-    static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"(.+ - [0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
+    static std::regex reg(R"(TINFO:([0-9]+),[0-9]+,[0-9]+,\"((?:.*)?[0-9]+ chapter\(s\)) , ([0-9]*(?:[.][0-9]+)?) GB\")");
     std::smatch title_match;
     TitleSelection current_title;
 
@@ -70,7 +70,6 @@ std::string buildRipCommand(const char *command, const std::string destination) 
     fp = popen(command, "r");
 
     if (fp == NULL) {
-        std::cout << "error" << std::endl;
         throw std::runtime_error("command run failed");
     }
 
@@ -144,7 +143,6 @@ void execRip(std::string rip_command) {
     fp = popen(rip_command.c_str(), "r");
 
     if (fp == NULL) {
-        std::cout << "error" << std::endl;
         throw std::runtime_error("command run failed");
     }
 
