@@ -1,6 +1,6 @@
 # makemkv_cmd_helper
 
-A wrapper around makemkvcon that makes it easier to identify titles and rip .mkv files using only the command line.
+A wrapper around makemkvcon that makes it easier to identify titles and rip .mkv files using only the command line. Particularly usefull for headless setups where using the makemkv GUI is not possible.
 
 ### Usage
 ```
