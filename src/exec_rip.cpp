@@ -2,10 +2,12 @@
 #include <array>
 #include <iostream>
 
+std::string clear_screen = "\033[2J\033[1;1H";
+
 namespace {
 
 void displayState(RipState state) {
-    std::cout << "\033[2J\033[1;1H";
+    std::cout << clear_screen;
     std::cout << "Current Operation: " << state.current_operation << std::endl;
     std::cout << "Current Action: " << state.current_action << std::endl;
     std::cout << "Current Progress: " << state.current_progress << "%" << std::endl;
