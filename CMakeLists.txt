@@ -9,6 +9,7 @@ add_executable(makemkv_helper
     src/build_rip_command.cpp
     src/exec_rip.cpp
     src/parse_output.cpp
+    src/loading_spinner.cpp
 )
 
 target_include_directories(makemkv_helper PUBLIC include)

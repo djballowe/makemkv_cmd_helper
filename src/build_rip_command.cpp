@@ -1,5 +1,6 @@
 #include "../include/makemkv_cmd_helper/parse_output.h"
 #include <array>
+#include <atomic>
 #include <iostream>
 #include <limits>
 
@@ -32,7 +33,7 @@ int selectTitle(std::vector<TitleSelection> &titles) {
 
 } // namespace
 
-std::string buildRipCommand(const char *command, const std::string destination) {
+std::string buildRipCommand(const char *command, const std::string destination, std::atomic<bool> &finished) {
     FILE *fp;
     fp = popen(command, "r");
 
@@ -55,6 +56,7 @@ std::string buildRipCommand(const char *command, const std::string destination) 
         throw std::runtime_error("error closing child process");
     }
 
+    finished = true;
     if (titles.size() == 0) {
         throw std::runtime_error("no titles found");
     }
