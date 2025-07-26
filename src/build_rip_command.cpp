@@ -1,4 +1,5 @@
 #include "../include/makemkv_cmd_helper/parse_output.h"
+#include "../include/makemkv_cmd_helper/exec_rip.h"
 #include <array>
 #include <atomic>
 #include <iostream>
@@ -7,6 +8,7 @@
 namespace {
 
 int selectTitle(std::vector<TitleSelection> &titles) {
+    std::cout << clear_screen;
     std::cout << "found titles" << std::endl;
     for (int i = 0; i < titles.size(); i++) {
         std::cout << "Title: " << i << std::endl;
