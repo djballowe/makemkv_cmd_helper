@@ -33,6 +33,7 @@ int selectTitle(std::vector<TitleSelection> &titles) {
 
 } // namespace
 
+// add you have to add a sturct that will set finished to true no matter what if the function terminates
 std::string buildRipCommand(const char *command, const std::string destination, std::atomic<bool> &finished) {
     FILE *fp;
     fp = popen(command, "r");
