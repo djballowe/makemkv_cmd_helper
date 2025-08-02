@@ -14,6 +14,7 @@ struct TitleSelection {
     std::string name = "";
     int title_number = -1;
     double size = -1.0;
+    std::vector<std::string> sub_info;
 };
 
 bool parseLoading(std::string line, RipState &state);

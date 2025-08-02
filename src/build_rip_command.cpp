@@ -1,14 +1,16 @@
-#include "../include/makemkv_cmd_helper/parse_output.h"
 #include "../include/makemkv_cmd_helper/exec_rip.h"
+#include "../include/makemkv_cmd_helper/parse_output.h"
 #include <array>
 #include <atomic>
 #include <iostream>
 #include <limits>
+#include <sstream>
+#include <string>
 
 namespace {
 
 int selectTitle(std::vector<TitleSelection> &titles) {
-    std::cout << clear_screen;
+    // std::cout << clear_screen;
     std::cout << "found titles" << std::endl;
     for (int i = 0; i < titles.size(); i++) {
         std::cout << "Title: " << i << std::endl;
@@ -33,6 +35,24 @@ int selectTitle(std::vector<TitleSelection> &titles) {
     return title_selection;
 }
 
+int currentTitle(std::string &line) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(line);
+    std::string token;
+    char split_char = ':';
+
+    // get the second part of this
+    while (std::getline(ss, token, split_char)) {
+        tokens.push_back(token);
+    }
+
+    for (std::string token : tokens) {
+        std::cout << token << std::endl;
+    }
+
+    return 1;
+}
+
 } // namespace
 
 // add you have to add a struct that will set finished to true no matter what if the function terminates
@@ -45,10 +65,13 @@ std::string buildRipCommand(const char *command, const std::string destination, 
     }
 
     std::vector<TitleSelection> titles;
+    int curr_title_int = 0;
     std::array<char, 256> buffer;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
+        curr_title_int = currentTitle(line);
+
         if (line[0] == 'T') {
             parseTitle(titles, line);
         }
