@@ -10,6 +10,7 @@ add_executable(makemkv_helper
     src/exec_rip.cpp
     src/parse_output.cpp
     src/loading_spinner.cpp
+    src/start_threads.cpp
 )
 
 target_include_directories(makemkv_helper PUBLIC include)
