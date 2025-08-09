@@ -19,4 +19,6 @@ struct TitleSelection {
 
 bool parseLoading(std::string line, RipState &state);
 
-void parseTitle(std::vector<TitleSelection> &titles, std::string &line);
+void parseTitle(std::vector<TitleSelection> &titles, std::string line, int &valid_title);
+
+void addSubtitle(std::vector<TitleSelection> &titles, std::string line);

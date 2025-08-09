@@ -2,6 +2,7 @@
 #include "../include/makemkv_cmd_helper/parse_output.h"
 #include <array>
 #include <atomic>
+#include <exception>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -35,27 +36,32 @@ int selectTitle(std::vector<TitleSelection> &titles) {
     return title_selection;
 }
 
-int currentTitle(std::string &line) {
+int currentTitle(std::string line) {
+    int curr_title = -1;
     std::vector<std::string> tokens;
     std::stringstream ss(line);
     std::string token;
     char split_char = ':';
 
-    // get the second part of this
     while (std::getline(ss, token, split_char)) {
         tokens.push_back(token);
     }
 
-    for (std::string token : tokens) {
-        std::cout << token << std::endl;
+    if (tokens.size()) {
+        try {
+            curr_title = stoi(tokens[1]);
+        } catch (const std::exception &e) {
+            throw std::runtime_error("Malformed string could not convert title text to number");
+        }
     }
 
-    return 1;
+    return curr_title;
 }
 
 } // namespace
 
 // add you have to add a struct that will set finished to true no matter what if the function terminates
+// this function needs work its confusing and hard to understand
 std::string buildRipCommand(const char *command, const std::string destination, std::atomic<bool> &finished) {
     FILE *fp;
     fp = popen(command, "r");
@@ -65,15 +71,21 @@ std::string buildRipCommand(const char *command, const std::string destination, 
     }
 
     std::vector<TitleSelection> titles;
-    int curr_title_int = 0;
+    int curr_title = 0;
+    int valid_title = -1;
+    int curr_subtitle = 0;
     std::array<char, 256> buffer;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
-        curr_title_int = currentTitle(line);
 
         if (line[0] == 'T') {
-            parseTitle(titles, line);
+            curr_title = currentTitle(line);
+            parseTitle(titles, line, valid_title);
+        }
+
+        if (line[0] == 'S' && curr_title == valid_title) {
+            addSubtitle(titles, line);
         }
     }
 
@@ -85,6 +97,14 @@ std::string buildRipCommand(const char *command, const std::string destination, 
     finished = true;
     if (titles.size() == 0) {
         throw std::runtime_error("no titles found");
+    }
+
+    // is the reiteration here stupid? just do it in place?
+    for (TitleSelection title : titles) {
+        std::cout << title.name << " | " << title.title_number << std::endl;
+        for (std::string sub_info : title.sub_info) {
+            std::cout << "-----------     " << sub_info << std::endl;
+        }
     }
 
     int title_selection = selectTitle(titles);
