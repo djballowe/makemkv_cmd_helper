@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -12,13 +13,12 @@ struct RipState {
 
 struct TitleSelection {
     std::string name = "";
-    int title_number = -1;
     double size = -1.0;
     std::vector<std::string> sub_info;
 };
 
 bool parseLoading(std::string line, RipState &state);
 
-void parseTitle(std::vector<TitleSelection> &titles, std::string line, int &valid_title);
+void parseTitle(std::map<int, TitleSelection> &titles, std::string line, int &valid_title);
 
-void addSubtitle(std::vector<TitleSelection> &titles, std::string line);
+void parseSubtitles(std::vector<TitleSelection> &titles, std::vector<std::string> &sub_titles);

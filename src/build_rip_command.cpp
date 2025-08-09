@@ -5,17 +5,18 @@
 #include <exception>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <string>
 
 namespace {
 
-int selectTitle(std::vector<TitleSelection> &titles) {
+int selectTitle(std::map<int, TitleSelection> &titles) {
     // std::cout << clear_screen;
     std::cout << "found titles" << std::endl;
-    for (int i = 0; i < titles.size(); i++) {
-        std::cout << "Title: " << i << std::endl;
-        std::cout << "------- " << titles[i].name << "| " << titles[i].size << " GB" << std::endl;
+    for (const auto &[title, values] : titles) {
+        std::cout << "Title: " << title << std::endl;
+        std::cout << "------- " << values.name << "| " << values.size << " GB" << std::endl;
     }
 
     int title_selection = -1;
@@ -64,17 +65,18 @@ int currentTitle(std::string line) {
 // this function needs work its confusing and hard to understand
 std::string buildRipCommand(const char *command, const std::string destination, std::atomic<bool> &finished) {
     FILE *fp;
+    std::array<char, 256> buffer;
     fp = popen(command, "r");
 
     if (fp == NULL) {
         throw std::runtime_error("command run failed");
     }
 
-    std::vector<TitleSelection> titles;
+    std::map<int, TitleSelection> titles;
+    std::vector<std::string> sub_titles;
     int curr_title = 0;
     int valid_title = -1;
     int curr_subtitle = 0;
-    std::array<char, 256> buffer;
 
     while (fgets(buffer.data(), sizeof(buffer), fp) != NULL) {
         std::string line(buffer.data());
@@ -85,9 +87,11 @@ std::string buildRipCommand(const char *command, const std::string destination, 
         }
 
         if (line[0] == 'S' && curr_title == valid_title) {
-            addSubtitle(titles, line);
+            sub_titles.push_back(line);
         }
     }
+
+    // parseSubtitles(titles, sub_titles);
 
     int close_status = pclose(fp);
     if (close_status == -1) {
@@ -99,17 +103,9 @@ std::string buildRipCommand(const char *command, const std::string destination, 
         throw std::runtime_error("no titles found");
     }
 
-    // is the reiteration here stupid? just do it in place?
-    for (TitleSelection title : titles) {
-        std::cout << title.name << " | " << title.title_number << std::endl;
-        for (std::string sub_info : title.sub_info) {
-            std::cout << "-----------     " << sub_info << std::endl;
-        }
-    }
-
     int title_selection = selectTitle(titles);
 
-    std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(titles[title_selection].title_number) + " " + destination;
+    std::string rip_command = "makemkvcon mkv --progress=-same disc:0 " + std::to_string(title_selection) + " " + destination;
 
     return rip_command;
 }
