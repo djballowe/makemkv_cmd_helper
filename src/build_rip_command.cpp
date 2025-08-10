@@ -16,7 +16,10 @@ int selectTitle(std::map<int, TitleSelection> &titles) {
     std::cout << "found titles" << std::endl;
     for (const auto &[title, values] : titles) {
         std::cout << "Title: " << title << std::endl;
-        std::cout << "------- " << values.name << "| " << values.size << " GB" << std::endl;
+        std::cout << "------- " << values.name << " | " << values.size << " GB" << std::endl;
+        for (const auto &[subKey, subValue] : values.sub_info) {
+            std::cout << "------------- " << subValue << std::endl;
+        }
     }
 
     int title_selection = -1;
@@ -62,7 +65,6 @@ int currentTitle(std::string line) {
 } // namespace
 
 // add you have to add a struct that will set finished to true no matter what if the function terminates
-// this function needs work its confusing and hard to understand
 std::string buildRipCommand(const char *command, const std::string destination, std::atomic<bool> &finished) {
     FILE *fp;
     std::array<char, 256> buffer;
@@ -91,7 +93,7 @@ std::string buildRipCommand(const char *command, const std::string destination, 
         }
     }
 
-    // parseSubtitles(titles, sub_titles);
+    parseSubtitles(titles, sub_titles);
 
     int close_status = pclose(fp);
     if (close_status == -1) {

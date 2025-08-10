@@ -55,14 +55,25 @@ void parseTitle(std::map<int, TitleSelection> &titles, std::string line, int &va
     return;
 }
 
-void parseSubtitles(std::vector<TitleSelection> &titles, std::vector<std::string> &sub_titles) {
+void parseSubtitles(std::map<int, TitleSelection> &titles, std::vector<std::string> &sub_titles) {
+    std::map<int, std::string> sorted_sub_titles;
+
     for (std::string sub_title : sub_titles) {
         static std::regex reg(R"(SINFO:([0-9]+),([0-9]+),([0-9]+),([0-9]+),\"(.*)?\")");
         std::smatch subtitle_match;
 
+        int prev_sub_title = 0;
+
         if (std::regex_search(sub_title, subtitle_match, reg) && subtitle_match.size() == 6) {
+            int title = stoi(subtitle_match[1]);
+            int sub_title_group = stoi(subtitle_match[2]);
+            std::string sub_title_data = subtitle_match[5];
+
+            if (titles.find(title) != titles.end()) {
+                titles[title].sub_info[sub_title_group] += (" " + sub_title_data + ",");
+            } else {
+                throw std::runtime_error("title string mismatch");
+            }
         }
     }
-
-    return;
 }
