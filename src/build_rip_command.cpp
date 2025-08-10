@@ -16,9 +16,9 @@ int selectTitle(std::map<int, TitleSelection> &titles) {
     std::cout << "found titles" << std::endl;
     for (const auto &[title, values] : titles) {
         std::cout << "Title: " << title << std::endl;
-        std::cout << "------- " << values.name << " | " << values.size << " GB" << std::endl;
+        std::cout << values.name << " | " << values.size << " GB" << std::endl;
         for (const auto &[subKey, subValue] : values.sub_info) {
-            std::cout << "------------- " << subValue << std::endl;
+            std::cout << "------- " << subValue << std::endl;
         }
     }
 
