@@ -12,7 +12,7 @@
 namespace {
 
 int selectTitle(std::map<int, TitleSelection> &titles) {
-    // std::cout << clear_screen;
+    std::cout << clear_screen;
     std::cout << "found titles" << std::endl;
     for (const auto &[title, values] : titles) {
         std::cout << "Title: " << title << std::endl;
